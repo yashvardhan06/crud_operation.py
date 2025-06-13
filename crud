@@ -1,0 +1,103 @@
+import json
+
+class Task:
+    def __init__(self, task_id, title, description, status="Pending"):
+        self.task_id = task_id
+        self.title = title
+        self.description = description
+        self.status = status
+
+    def to_dict(self):
+        return {"task_id": self.task_id, "title": self.title, "description": self.description, "status": self.status}
+
+class TaskManager:
+    def __init__(self):
+        self.tasks = []
+        self.load_tasks()
+
+    def save_tasks(self):
+        with open("tasks.json", "w") as file:
+            json.dump([task.to_dict() for task in self.tasks], file, indent=4)
+
+    def load_tasks(self):
+        try:
+            with open("tasks.json", "r") as file:
+                task_data = json.load(file)
+                self.tasks = [Task(**task) for task in task_data]
+        except FileNotFoundError:
+            self.tasks = []
+
+    def create_task(self, task_id, title, description):
+        task = Task(task_id, title, description)
+        self.tasks.append(task)
+        self.save_tasks()
+        print(f"Task '{title}' created successfully.")
+
+    def read_tasks(self):
+        if not self.tasks:
+            print("No tasks available.")
+            return
+        print("\nCurrent Tasks:")
+        for task in self.tasks:
+            print(f"ID: {task.task_id}, Title: {task.title}, Status: {task.status}")
+
+    def update_task(self, task_id, title=None, description=None, status=None):
+        for task in self.tasks:
+            if task.task_id == task_id:
+                if title:
+                    task.title = title
+                if description:
+                    task.description = description
+                if status:
+                    task.status = status
+                self.save_tasks()
+                print(f"Task '{task_id}' updated successfully.")
+                return
+        print("Task not found.")
+
+    def delete_task(self, task_id):
+        for task in self.tasks:
+            if task.task_id == task_id:
+                self.tasks.remove(task)
+                self.save_tasks()
+                print(f"Task '{task_id}' deleted successfully.")
+                return
+        print("Task not found.")
+
+# Interactive Console
+def main():
+    task_manager = TaskManager()
+
+    while True:
+        print("\nTask Manager:")
+        print("1. Create Task")
+        print("2. View Tasks")
+        print("3. Update Task")
+        print("4. Delete Task")
+        print("5. Exit")
+
+        choice = input("Enter choice: ")
+        if choice == "1":
+            task_id = int(input("Enter Task ID: "))
+            title = input("Enter Title: ")
+            description = input("Enter Description: ")
+            task_manager.create_task(task_id, title, description)
+        elif choice == "2":
+            task_manager.read_tasks()
+        elif choice == "3":
+            task_id = int(input("Enter Task ID to Update: "))
+            title = input("Enter new title (leave blank if no change): ")
+            description = input("Enter new description (leave blank if no change): ")
+            status = input("Enter new status (leave blank if no change): ")
+            task_manager.update_task(task_id, title or None, description or None, status or None)
+        elif choice == "4":
+            task_id = int(input("Enter Task ID to Delete: "))
+            task_manager.delete_task(task_id)
+        elif choice == "5":
+            print("Exiting Task Manager.")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+if __name__ == "__main__":
+    main()
